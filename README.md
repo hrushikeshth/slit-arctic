@@ -51,5 +51,7 @@ To run the app, enter:
    
 ### Developer Information
 **Hrushikesh J. Thorat**
+
 Company: Fractal AI
+
 [LinkedIn](https://www.linkedin.com/in/hrushikeshth/)
