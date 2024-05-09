@@ -45,7 +45,7 @@ Create a `.streamlit` folder with a `secrets.toml` file inside.
 To run the app, enter:
    ```bash
    cd ..
-   streamlit run simple_app.py
+   streamlit run snow-arctic-gpt.py
    ```
 
    
