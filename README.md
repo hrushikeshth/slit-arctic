@@ -1,4 +1,4 @@
-# ❄️ Snowflake Arctic GPT
+# ❆ Snowflake-Arctic dbt Assistant
 This Streamlit app is just small demonstration of a general use-case of the new 🤖 LLM from ❄️ Snowflake called Arctic. I'll be updating this or adding new apps for a more specific use-case related to Data Warehousing & Data Modelling functionalities. For now, I'm developing this as the participation project for [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/).
 
 
