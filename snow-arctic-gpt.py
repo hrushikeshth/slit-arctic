@@ -8,11 +8,12 @@ from transformers import AutoTokenizer
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
 
 # App title
-st.set_page_config(page_title="❄️ Snowflake Arctic GPT")
+st.set_page_config(page_title="❄️ Arctic dbt Assistant")
 
 # Replicate Credentials
 with st.sidebar:
-    st.title(':snowflake: :blue[Snowflake Arctic] GPT')
+    st.image('./dbt-seeklogo.svg', width=35)
+    st.title(':blue[Arctic] dbt Assistant')
     if 'REPLICATE_API_TOKEN' in st.secrets:
         replicate_api = st.secrets['REPLICATE_API_TOKEN']
         st.success('Fuyioh! API Key Already Provided!', icon='🥳')
@@ -39,7 +40,7 @@ def read_csv_file(file_upload):
 
 # Store LLM-generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm Arctic, a new & efficient language model by Snowflake. Ask me anything, maybe generating an optimised query?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
 
 # Display or clear chat messages
 for message in st.session_state.messages:
@@ -47,7 +48,7 @@ for message in st.session_state.messages:
         st.write(message["content"])
 
 def clear_chat_history():
-    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm Arctic, a new & efficient language model by Snowflake. Ask me anything, maybe generating an optimised query?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm you dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
 st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM by Snowflake called [Snowflake Arctic](https://www.snowflake.com/blog/arctic-open-and-efficient-foundation-language-models-snowflake)')
