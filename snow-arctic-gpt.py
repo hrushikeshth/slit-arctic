@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import replicate
 import os
 from transformers import AutoTokenizer
@@ -26,6 +27,15 @@ with st.sidebar:
     # Hardcoding the temperature & sampling value to limit repetitive & unsensical tokens.
     temperature = 0.3
     top_p = 0.9
+
+# Accepting file input from User
+file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
+
+# Reading the CSV file in a Dataframe
+def read_csv_file(file_upload):
+    df = pd.read_csv(file_upload)
+    text = df.to_string(index=False)  # Convert DataFrame to string
+    return text
 
 # Store LLM-generated responses
 if "messages" not in st.session_state.keys():
@@ -81,6 +91,9 @@ def generate_arctic_response():
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api):
+    if file_upload is not None:
+        text = read_csv_file(file_upload)
+        st.session_state.messages.append({"role": "user", "content": text})
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="🙋🏻‍♂️"):
         st.write(prompt)
