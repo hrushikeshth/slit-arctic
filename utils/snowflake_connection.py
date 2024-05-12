@@ -3,7 +3,7 @@ import streamlit as st
 # Initialize connection.
 conn = st.connection("snowflake")
 
-class Snowflake_Connection:
+class snowflake_connection:
     # Load the table as a dataframe using the Snowpark Session.
     @st.cache_data
     def load_table():
