@@ -3,6 +3,7 @@ import pandas as pd
 import replicate
 import os
 from transformers import AutoTokenizer
+from template import get_template_message
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
@@ -40,10 +41,10 @@ def read_csv_file(file_upload):
 
 # Store LLM-generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
+    st.session_state.messages = [{"role": "assistant", "content": get_template_message()}]
 
 # Display or clear chat messages
-for message in st.session_state.messages:
+for message in st.session_state.messages[1:]:
     with st.chat_message(message["role"], avatar=icons[message["role"]]):
         st.write(message["content"])
 
