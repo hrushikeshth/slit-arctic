@@ -3,7 +3,6 @@ import pandas as pd
 import replicate
 import os
 from transformers import AutoTokenizer
-from utils.snowflake_connection import SnowflakeConnection
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
@@ -25,9 +24,6 @@ with st.sidebar:
             st.markdown("**Don't have an API token?** Visit [Replicate](https://replicate.com) to get one.")
 
     os.environ['REPLICATE_API_TOKEN'] = replicate_api
-
-    snowflake_conn = SnowflakeConnection()
-    snowflake_conn.display_table(snowflake_conn.df)
     
     # Hardcoding the temperature & sampling value to limit repetitive & unsensical tokens.
     temperature = 0.3
