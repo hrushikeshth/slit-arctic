@@ -3,7 +3,7 @@ import streamlit as st
 # Initialize connection.
 @st.cache(allow_output_mutation=True)
 def get_snowflake_connection():
-    return st.connection("snowflake")
+    return st.experimental_get_query_runner("snowflake")()
 
 conn = get_snowflake_connection()
 
