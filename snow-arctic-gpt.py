@@ -4,7 +4,7 @@ import replicate
 import os
 from transformers import AutoTokenizer
 from template import get_template_message
-from snowflake_connection import SnowflakeConnection
+from snow_connect import get_tables2
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
@@ -32,13 +32,13 @@ with st.sidebar:
     top_p = 0.9
 
     # Initialize Snowflake connection
-    snowflake_conn = SnowflakeConnection()
+    #snowflake_conn = SnowflakeConnection()
 
     # Get Snowflake session (optional if you don't need to use the session directly)
     #connection = snowflake_conn.get_conn()
 
     # Get the list of tables from the schema
-    tables = snowflake_conn.get_tables()
+    tables = get_tables2()
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
