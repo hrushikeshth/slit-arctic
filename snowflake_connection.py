@@ -37,7 +37,7 @@ class SnowflakeConnection:
         return self.conn
     
     def get_tables(self):
-        query = "SELECT table_name FROM information_schema.tables WHERE table_schema = '{schema}'".format(schema=st.secrets["snowflake"]["schema"])
+        query = "SELECT TABLE_NAME FROM AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
         df = pd.read_sql(query, self.conn)
         return df["TABLE_NAME"].tolist()
 
