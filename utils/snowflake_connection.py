@@ -1,27 +1,41 @@
+from typing import Any, Dict
+import pandas as pd
 import streamlit as st
+from snowflake.snowpark.session import Session
+from snowflake.snowpark.version import VERSION
 
-# Initialize connection.
-@st.cache(allow_output_mutation=True)
-def get_snowflake_connection():
-    return st.experimental_get_query_runner("snowflake")()
-
-conn = get_snowflake_connection()
 
 class SnowflakeConnection:
-    # Load the table as a dataframe using the Snowflake connection.
+    def __init__(self):
+        self.connection_parameters = self._get_connection_parameters_from_env()
+        self.session = None
+
     @staticmethod
-    @st.cache(allow_output_mutation=True)
-    def load_table():
-        query = "SELECT * FROM PAYMENTS_INVOICES"
-        return conn.fetch_pandas_all(query)
+    def _get_connection_parameters_from_env() -> Dict[str, Any]:
+        connection_parameters = {
+            "account": st.secrets["ACCOUNT"],
+            "user": st.secrets["USER_NAME"],
+            "password": st.secrets["PASSWORD"],
+            "warehouse": st.secrets["WAREHOUSE"],
+            "database": st.secrets["DATABASE"],
+            "schema": st.secrets["SCHEMA"],
+            "role": st.secrets["ROLE"],
+        }
+        return connection_parameters
 
-    df = load_table()
+    def get_session(self):
+        if self.session is None:
+            self.session = Session.builder.configs(self.connection_parameters).create()
+            self.session.sql_simplifier_enabled = True
+        return self.session
+    
+    def get_tables(self):
+        query = "SELECT table_name FROM information_schema.tables WHERE table_schema = '{schema}'".format(schema=st.secrets["snowflake"]["schema"])
+        df = pd.read_sql(query, self.session)
+        return df["TABLE_NAME"].tolist()
 
-    # Display the dataframe.
-    @staticmethod
-    def display_table(df):
-        st.write(df)
-
-# Example usage:
-# snowflake_conn = SnowflakeConnection()
-# snowflake_conn.display_table(snowflake_conn.df)
+    def get_data(self, table_name, limit=50):
+        query = f"SELECT * FROM {table_name} LIMIT {limit}"
+        df = pd.read_sql(query, self.session)
+        return df
+    
