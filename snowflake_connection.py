@@ -28,17 +28,18 @@ class SnowflakeConnection:
             self.session = Session.builder.configs(self.connection_parameters).create()
             self.session.sql_simplifier_enabled = True
         return self.session
-    """
 
     def get_conn(self):
         if self.conn is None:
             # Initialize connection.
             conn = st.connection("snowflake")
         return self.conn
+    """
     
     def get_tables(self):
+        conn = st.connection("snowflake")
         query = "SELECT TABLE_NAME FROM AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
-        df = pd.read_sql(query, self.conn)
+        df = pd.read_sql(query, conn)
         return df["TABLE_NAME"].tolist()
 
     def get_data(self, table_name, limit=50):

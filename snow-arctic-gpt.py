@@ -35,7 +35,7 @@ with st.sidebar:
     snowflake_conn = SnowflakeConnection()
 
     # Get Snowflake session (optional if you don't need to use the session directly)
-    connection = snowflake_conn.get_conn()
+    #connection = snowflake_conn.get_conn()
 
     # Get the list of tables from the schema
     tables = snowflake_conn.get_tables()
