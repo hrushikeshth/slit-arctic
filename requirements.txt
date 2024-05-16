@@ -1,3 +1,5 @@
 streamlit
 replicate
 transformers
+pandas
+snowflake-snowpark-python
