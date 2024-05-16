@@ -4,7 +4,7 @@ import replicate
 import os
 from transformers import AutoTokenizer
 from template import get_template_message
-from utils.snowflake_connection import SnowflakeConnection
+from snowflake_connection import SnowflakeConnection
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
