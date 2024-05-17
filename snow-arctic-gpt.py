@@ -4,13 +4,37 @@ import replicate
 import os
 from transformers import AutoTokenizer
 from template import get_template_message
-from snow_connect import get_tables2
+from snowflake.snowpark import Session
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
 
 # App title
 st.set_page_config(page_title="❄️ Arctic dbt Assistant")
+
+table_name = "AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
+
+# Establish Snowflake session
+@st.cache_resource
+def create_session():
+    return Session.builder.configs(st.secrets.snowflake).create()
+
+session = create_session()
+st.success("Connected to Snowflake!")
+
+# Load data table
+@st.cache_data
+def load_data(table_name):
+    ## Read in data table
+    st.write(f"Here's some example data from `{table_name}`:")
+    table = session.table(table_name)
+    
+    ## Do some computation on it
+    table = table.limit(100)
+    
+    ## Collect the results. This will run the query and download the data
+    table = table.collect()
+    return table
 
 # Replicate Credentials
 with st.sidebar:
@@ -31,14 +55,10 @@ with st.sidebar:
     temperature = 0.3
     top_p = 0.9
 
-    # Initialize Snowflake connection
-    #snowflake_conn = SnowflakeConnection()
-
-    # Get Snowflake session (optional if you don't need to use the session directly)
-    #connection = snowflake_conn.get_conn()
-
-    # Get the list of tables from the schema
-    tables = get_tables2()
+    ## Display data table
+    with st.expander("See Table"):
+        df = load_data(table_name)
+        st.dataframe(df)
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])

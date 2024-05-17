@@ -3,13 +3,12 @@ import pandas as pd
 import streamlit as st
 #from snowflake.snowpark.session import Session
 #from snowflake.snowpark.version import VERSION
-
+"""
 class SnowflakeConnection:
     def __init__(self):
         #self.connection_parameters = self._get_connection_parameters_from_env()
         self.conn = None
 
-    """
     @staticmethod
     def _get_connection_parameters_from_env() -> Dict[str, Any]:
         connection_parameters = {
@@ -34,7 +33,7 @@ class SnowflakeConnection:
             # Initialize connection.
             conn = st.connection("snowflake")
         return self.conn
-    """
+
     
     def get_tables(self):
         conn = st.connection("snowflake")
@@ -46,4 +45,4 @@ class SnowflakeConnection:
         query = f"SELECT * FROM {table_name} LIMIT {limit}"
         df = pd.read_sql(query, self.conn)
         return df
-    
+"""

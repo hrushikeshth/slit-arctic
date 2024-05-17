@@ -3,3 +3,4 @@ replicate
 transformers
 pandas
 snowflake-snowpark-python
+snowflake-snowpark-session
