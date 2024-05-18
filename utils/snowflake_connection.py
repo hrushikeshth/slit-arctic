@@ -65,8 +65,8 @@ class SnowflakeConnection:
         return df["TABLE_NAME"].tolist()
 
     @st.cache_data(ttl=600)
-    def get_sample_data(_self, table_name, limit=3):  # Renaming 'self' to '_self'
-        query = f"SELECT * FROM {table_name} LIMIT {limit}"
+    def get_sample_data(_self, dbname, schemaname, table_name, limit=3):  # Renaming 'self' to '_self'
+        query = f"SELECT * FROM {dbname}.{schemaname}.{table_name} LIMIT {limit}"
         conn = _self.get_connector()
         df = pd.read_sql(query, conn)
         return df
