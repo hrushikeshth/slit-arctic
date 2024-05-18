@@ -113,6 +113,11 @@ if prompt := st.chat_input(disabled=not replicate_api):
     if file_upload is not None:
         text = read_csv_file(file_upload)
         st.session_state.messages.append({"role": "user", "content": text})
+    if selected_table:
+        # Get sample data from the selected table
+        sample_data = snowflake_conn.get_sample_data(selected_table)
+        sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
+        st.session_state.messages.append({"role": "user", "content": sample_dt_to_txt})
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="🙋🏻‍♂️"):
         st.write(prompt)
