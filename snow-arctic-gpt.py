@@ -123,7 +123,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
         st.write(prompt)
 
 # Generate a new response if last message is not from assistant
-if st.session_state.messages[-2]["role"] != "assistant":
+if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant", avatar="❄️"):
         response = generate_arctic_response()
         full_response = st.write_stream(response)
