@@ -4,7 +4,7 @@ import replicate
 import os
 from transformers import AutoTokenizer
 from template import get_template_message
-from snowflake_connection import SnowflakeConnection
+from utils.snowflake_connection import SnowflakeConnection
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
@@ -44,7 +44,9 @@ with st.sidebar:
     table_name = "AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
 
     # Display the tables in a dropdown menu
-    selected_table = st.selectbox("Select a table", tables)
+    selected_table = st.selectbox("Select a table", tables,
+                                  placeholder="None Selected"
+                                  )
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
