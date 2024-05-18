@@ -50,7 +50,7 @@ with st.sidebar:
     # Get the list of tables from the schema
     schema = snowflake_conn.get_schema(selected_db)
 
-    selected_sch = st.selectbox("Select a schema", schema, index=None
+    selected_sch = st.selectbox("Select a schema", schema, index=None,
                                   placeholder="None Selected"
                                   )
 
@@ -58,7 +58,7 @@ with st.sidebar:
     tables = snowflake_conn.get_tables(selected_db, selected_sch)
 
     # Display the tables in a dropdown menu
-    selected_table = st.selectbox("Select a table", tables, index=None
+    selected_table = st.selectbox("Select a table", tables, index=None,
                                   placeholder="None Selected"
                                   )
 
