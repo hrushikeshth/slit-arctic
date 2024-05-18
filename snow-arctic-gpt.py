@@ -48,7 +48,14 @@ with st.sidebar:
                                   )
     
     # Get the list of tables from the schema
-    tables = snowflake_conn.get_tables(selected_db)
+    schema = snowflake_conn.get_schema(selected_db)
+
+    selected_sch = st.selectbox("Select a schema", schema,
+                                  placeholder="None Selected"
+                                  )
+
+    # Get the list of tables from the schema
+    tables = snowflake_conn.get_tables(selected_db, selected_sch)
 
     # Display the tables in a dropdown menu
     selected_table = st.selectbox("Select a table", tables,
