@@ -18,6 +18,9 @@ snowflake_conn = SnowflakeConnection()
 # Get Snowflake session (optional if you don't need to use the session directly)
 session = snowflake_conn.get_session()
 
+# Get the list of dbs from the snow
+dblist = snowflake_conn.get_db()
+
 # Get the list of tables from the schema
 tables = snowflake_conn.get_tables()
 
@@ -41,7 +44,11 @@ with st.sidebar:
     top_p = 0.9
 
     # Select and display data table
-    table_name = "AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
+    # table_name = "AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
+
+    selected_db = st.selectbox("Select a database", dblist,
+                                  placeholder="None Selected"
+                                  )
 
     # Display the tables in a dropdown menu
     selected_table = st.selectbox("Select a table", tables,

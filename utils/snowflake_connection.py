@@ -42,10 +42,17 @@ class SnowflakeConnection:
                 role=self.connection_parameters["role"],
             )
         return self.connector
+    
+    @st.cache_data(ttl=600)
+    def get_db(_self):  # Renaming 'self' to '_self'
+        query = "SELECT database_name FROM snowflake.information_schema.databases"
+        conn = _self.get_connector()
+        df = pd.read_sql(query, conn)
+        return df["DB_NAME"].tolist()
 
     @st.cache_data(ttl=600)
-    def get_tables(_self):  # Renaming 'self' to '_self'
-        query = "SELECT table_name FROM amz_vendor_data.information_schema.tables"
+    def get_tables(_self, dbname):  # Renaming 'self' to '_self'
+        query = "SELECT table_name FROM {dbname}.information_schema.tables"
         conn = _self.get_connector()
         df = pd.read_sql(query, conn)
         return df["TABLE_NAME"].tolist()
