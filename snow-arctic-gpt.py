@@ -43,14 +43,14 @@ with st.sidebar:
     # Select and display data table
     # table_name = "AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
 
-    selected_db = st.selectbox("Select a database", dblist,
+    selected_db = st.selectbox("Select a database", dblist, index=None,
                                   placeholder="None Selected"
                                   )
     
     # Get the list of tables from the schema
     schema = snowflake_conn.get_schema(selected_db)
 
-    selected_sch = st.selectbox("Select a schema", schema,
+    selected_sch = st.selectbox("Select a schema", schema, index=None
                                   placeholder="None Selected"
                                   )
 
@@ -58,7 +58,7 @@ with st.sidebar:
     tables = snowflake_conn.get_tables(selected_db, selected_sch)
 
     # Display the tables in a dropdown menu
-    selected_table = st.selectbox("Select a table", tables,
+    selected_table = st.selectbox("Select a table", tables, index=None
                                   placeholder="None Selected"
                                   )
 
