@@ -4,13 +4,22 @@ import replicate
 import os
 from transformers import AutoTokenizer
 from template import get_template_message
-from snow_connect import load_data
+from snowflake_connection import SnowflakeConnection
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
 
 # App title
 st.set_page_config(page_title="❄️ Arctic dbt Assistant")
+
+# Initialize Snowflake connection
+snowflake_conn = SnowflakeConnection()
+
+# Get Snowflake session (optional if you don't need to use the session directly)
+session = snowflake_conn.get_session()
+
+# Get the list of tables from the schema
+tables = snowflake_conn.get_tables()
 
 # Replicate Credentials
 with st.sidebar:
@@ -32,12 +41,10 @@ with st.sidebar:
     top_p = 0.9
 
     # Select and display data table
-    table_name = "STREAMHACK.DBTEST.TESTINGSTREAM"
+    table_name = "AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
 
-    ## Display data table
-    with st.expander("See Table"):
-        df = load_data(table_name)
-        st.dataframe(df)
+    # Display the tables in a dropdown menu
+    selected_table = st.selectbox("Select a table", tables)
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
