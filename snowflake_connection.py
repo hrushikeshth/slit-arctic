@@ -43,17 +43,17 @@ class SnowflakeConnection:
             )
         return self.connector
 
-    @st.cache_data(ttl=600)  # Caching the table list for 10 minutes
-    def get_tables(self):
-        query = "SELECT table_name FROM amz_vendor_data.information_schema.tables"
-        conn = self.get_connector()
+    @st.cache_data(ttl=600)
+    def get_tables(_self):  # Renaming 'self' to '_self'
+        query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'your_schema'"
+        conn = _self.get_connector()
         df = pd.read_sql(query, conn)
         return df["TABLE_NAME"].tolist()
 
-    @st.cache_data(ttl=600)  # Caching the sample data for 10 minutes
-    def get_sample_data(self, table_name, limit=50):
+    @st.cache_data(ttl=600)
+    def get_sample_data(_self, table_name, limit=50):  # Renaming 'self' to '_self'
         query = f"SELECT * FROM {table_name} LIMIT {limit}"
-        conn = self.get_connector()
+        conn = _self.get_connector()
         df = pd.read_sql(query, conn)
         return df
 
