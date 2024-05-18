@@ -21,9 +21,6 @@ session = snowflake_conn.get_session()
 # Get the list of dbs from the snow
 dblist = snowflake_conn.get_db()
 
-# Get the list of tables from the schema
-tables = snowflake_conn.get_tables()
-
 # Replicate Credentials
 with st.sidebar:
     st.image('./dbt-seeklogo.svg', width=35)
@@ -49,6 +46,9 @@ with st.sidebar:
     selected_db = st.selectbox("Select a database", dblist,
                                   placeholder="None Selected"
                                   )
+    
+    # Get the list of tables from the schema
+    tables = snowflake_conn.get_tables(selected_db)
 
     # Display the tables in a dropdown menu
     selected_table = st.selectbox("Select a table", tables,
