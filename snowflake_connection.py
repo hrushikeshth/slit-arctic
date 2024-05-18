@@ -1,14 +1,15 @@
 from typing import Any, Dict
 import pandas as pd
 import streamlit as st
+import snowflake.connector
 from snowflake.snowpark.session import Session
-from snowflake.snowpark.version import VERSION
 
 
 class SnowflakeConnection:
     def __init__(self):
         self.connection_parameters = self._get_connection_parameters_from_env()
         self.session = None
+        self.connector = None
 
     @staticmethod
     def _get_connection_parameters_from_env() -> Dict[str, Any]:
@@ -16,7 +17,7 @@ class SnowflakeConnection:
             "account": st.secrets["account"],
             "user": st.secrets["user"],
             "password": st.secrets["password"],
-            "warehouse": st.secrets["warehosue"],
+            "warehouse": st.secrets["warehouse"],
             "database": st.secrets["database"],
             "schema": st.secrets["schema"],
             "role": st.secrets["role"],
@@ -28,13 +29,38 @@ class SnowflakeConnection:
             self.session = Session.builder.configs(self.connection_parameters).create()
             self.session.sql_simplifier_enabled = True
         return self.session
-    
+
+    def get_connector(self):
+        if self.connector is None:
+            self.connector = snowflake.connector.connect(
+                account=self.connection_parameters["account"],
+                user=self.connection_parameters["user"],
+                password=self.connection_parameters["password"],
+                warehouse=self.connection_parameters["warehouse"],
+                database=self.connection_parameters["database"],
+                schema=self.connection_parameters["schema"],
+                role=self.connection_parameters["role"],
+            )
+        return self.connector
+
+    @st.cache_data(ttl=600)  # Caching the table list for 10 minutes
     def get_tables(self):
         query = "SELECT table_name FROM amz_vendor_data.information_schema.tables"
-        df = pd.read_sql(query, self.session)
+        conn = self.get_connector()
+        df = pd.read_sql(query, conn)
         return df["TABLE_NAME"].tolist()
 
+    @st.cache_data(ttl=600)  # Caching the sample data for 10 minutes
     def get_sample_data(self, table_name, limit=50):
         query = f"SELECT * FROM {table_name} LIMIT {limit}"
-        df = pd.read_sql(query, self.session)
+        conn = self.get_connector()
+        df = pd.read_sql(query, conn)
         return df
+
+    def close_session(self):
+        if self.session is not None:
+            self.session.close()
+            self.session = None
+        if self.connector is not None:
+            self.connector.close()
+            self.connector = None
