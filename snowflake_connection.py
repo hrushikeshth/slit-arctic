@@ -45,7 +45,7 @@ class SnowflakeConnection:
 
     @st.cache_data(ttl=600)
     def get_tables(_self):  # Renaming 'self' to '_self'
-        query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'your_schema'"
+        query = "SELECT table_name FROM amz_vendor_data.information_schema.tables"
         conn = _self.get_connector()
         df = pd.read_sql(query, conn)
         return df["TABLE_NAME"].tolist()
