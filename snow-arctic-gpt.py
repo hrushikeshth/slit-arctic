@@ -129,7 +129,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
     if file_upload is not None:
         text = read_csv_file(file_upload)
         st.session_state.messages.append({"role": "user", "content": 'csv upload'+text})
-    if selected_table:
+    elif selected_table:
         # Get sample data from the selected table
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
         sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
