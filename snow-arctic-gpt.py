@@ -77,7 +77,7 @@ if "messages" not in st.session_state.keys():
     st.session_state.messages.append({"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"})
 
 # Display or clear chat messages
-for message in st.session_state.messages[2:]:
+for message in st.session_state.messages[3:]:
     with st.chat_message(message["role"], avatar=icons[message["role"]]):
         st.write(message["content"])
 
