@@ -70,6 +70,13 @@ class SnowflakeConnection:
         conn = _self.get_connector()
         df = pd.read_sql(query, conn)
         return df
+    
+    @st.cache_data(ttl=600)
+    def get_ddl(_self, dbname, schemaname, table_name):
+        query = f"SELECT GET_DDL('table', '{dbname}.{schemaname}.{table_name}')"
+        conn = _self.get_connector()
+        df = pd.read_sql(query, conn)
+        return df
 
     def close_session(self):
         if self.session is not None:

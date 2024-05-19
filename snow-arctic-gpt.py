@@ -48,14 +48,16 @@ with st.sidebar:
                                   )
     
     # Get the list of tables from the schema
-    schema = snowflake_conn.get_schema(selected_db)
+    if selected_db is not None:
+        schema = snowflake_conn.get_schema(selected_db)
 
     selected_sch = st.selectbox("Select a schema", schema, index=None,
                                   placeholder="None Selected"
                                   )
 
-    # Get the list of tables from the schema
-    tables = snowflake_conn.get_tables(selected_db, selected_sch)
+    if selected_sch is not None:
+        # Get the list of tables from the schema
+        tables = snowflake_conn.get_tables(selected_db, selected_sch)
 
     # Display the tables in a dropdown menu
     selected_table = st.selectbox("Select a table", tables, index=None,
@@ -129,7 +131,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
     if file_upload is not None:
         text = read_csv_file(file_upload)
         st.session_state.messages.append({"role": "user", "content": 'csv upload'+text})
-    elif selected_table:
+    elif selected_table is not None:
         # Get sample data from the selected table
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
         sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
