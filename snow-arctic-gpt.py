@@ -36,6 +36,7 @@ def setup_sidebar():
                 st.markdown("**Don't have an API token?** Visit [Replicate](https://replicate.com) to get one.")
 
         os.environ['REPLICATE_API_TOKEN'] = replicate_api
+        selected_db, selected_sch, selected_table = display_database_selection()
         return replicate_api
 
 replicate_api = setup_sidebar()
@@ -50,8 +51,6 @@ def display_database_selection():
             selected_table = st.selectbox("Select a table", tables, index=None, placeholder="None Selected")
             return selected_db, selected_sch, selected_table
     return None, None, None
-
-selected_db, selected_sch, selected_table = display_database_selection()
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
