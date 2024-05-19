@@ -18,57 +18,52 @@ snowflake_conn = SnowflakeConnection()
 # Get Snowflake session (optional if you don't need to use the session directly)
 session = snowflake_conn.get_session()
 
-# Get the list of dbs from the snow
+# Get the list of databases from Snowflake
 dblist = snowflake_conn.get_db()
 
 # Replicate Credentials
-with st.sidebar:
-    st.image('./dbt-seeklogo.svg', width=35)
-    st.title(':blue[Arctic] dbt Assistant')
-    if 'REPLICATE_API_TOKEN' in st.secrets:
-        replicate_api = st.secrets['REPLICATE_API_TOKEN']
-        st.success('Fuyioh! API Key Already Provided!', icon='🥳')
-    else:
-        replicate_api = st.text_input('Enter Replicate API token:', type='password')
-        if not (replicate_api.startswith('r8_') and len(replicate_api)==40):
-            st.warning('Please enter your Replicate API token.', icon='⚠️')
-            st.markdown("**Don't have an API token?** Visit [Replicate](https://replicate.com) to get one.")
+def setup_sidebar():
+    with st.sidebar:
+        st.image('./dbt-seeklogo.svg', width=35)
+        st.title(':blue[Arctic] dbt Assistant')
+        if 'REPLICATE_API_TOKEN' in st.secrets:
+            replicate_api = st.secrets['REPLICATE_API_TOKEN']
+            st.success('Fuyioh! API Key Already Provided!', icon='🥳')
+        else:
+            replicate_api = st.text_input('Enter Replicate API token:', type='password')
+            if not (replicate_api.startswith('r8_') and len(replicate_api) == 40):
+                st.warning('Please enter your Replicate API token.', icon='⚠️')
+                st.markdown("**Don't have an API token?** Visit [Replicate](https://replicate.com) to get one.")
 
-    os.environ['REPLICATE_API_TOKEN'] = replicate_api
-    
-    # Hardcoding the temperature & sampling value to limit repetitive & unsensical tokens.
-    temperature = 0.3
-    top_p = 0.9
+        os.environ['REPLICATE_API_TOKEN'] = replicate_api
+        return replicate_api
 
-    # Select and display data table
-    # table_name = "AMZ_VENDOR_DATA.INFORMATION_SCHEMA.TABLES"
+replicate_api = setup_sidebar()
 
-    selected_db = st.selectbox("Select a database", dblist, index=None,
-                                  placeholder="None Selected"
-                                  )
-    
-    # Get the list of tables from the schema
-    if selected_db is not None:
+def display_database_selection():
+    selected_db = st.selectbox("Select a database", dblist, index=None, placeholder="None Selected")
+    if selected_db:
         schema = snowflake_conn.get_schema(selected_db)
-        selected_sch = st.selectbox("Select a schema", schema, index=None,
-                                    placeholder="None Selected"
-                                    )
-        if selected_sch is not None:
-            # Get the list of tables from the schema
+        selected_sch = st.selectbox("Select a schema", schema, index=None, placeholder="None Selected")
+        if selected_sch:
             tables = snowflake_conn.get_tables(selected_db, selected_sch)
-            # Display the tables in a dropdown menu
-            selected_table = st.selectbox("Select a table", tables, index=None,
-                                        placeholder="None Selected"
-                                        )
+            selected_table = st.selectbox("Select a table", tables, index=None, placeholder="None Selected")
+            return selected_db, selected_sch, selected_table
+    return None, None, None
+
+selected_db, selected_sch, selected_table = display_database_selection()
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
 
 # Reading the CSV file in a Dataframe
 def read_csv_file(file_upload):
-    df = pd.read_csv(file_upload)
-    text = df.to_string(index=False)  # Convert DataFrame to string
-    return text
+    if file_upload is not None:
+        df = pd.read_csv(file_upload)
+        return df.to_string(index=False)
+    return ""
+
+text = read_csv_file(file_upload)
 
 # Store LLM-generated responses
 if "messages" not in st.session_state.keys():
@@ -81,9 +76,10 @@ for message in st.session_state.messages[3:]:
         st.write(message["content"])
 
 def clear_chat_history():
-    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm you dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
+
 st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM by Snowflake called [Snowflake Arctic](https://www.snowflake.com/blog/arctic-open-and-efficient-foundation-language-models-snowflake)')
 # st.sidebar.caption('The app repository can be found [here](https://github.com/hrushikeshth/slit-arctic)')
 
@@ -102,11 +98,11 @@ def generate_arctic_response():
     prompt = []
     for dict_message in st.session_state.messages:
         if dict_message["role"] == "user":
-            prompt.append("<|im_start|>user\n" + dict_message["content"] + "<|im_end|>")
+            prompt.append("user\n" + dict_message["content"] + "")
         else:
-            prompt.append("<|im_start|>assistant\n" + dict_message["content"] + "<|im_end|>")
+            prompt.append("assistant\n" + dict_message["content"] + "")
     
-    prompt.append("<|im_start|>assistant")
+    prompt.append("assistant")
     prompt.append("")
     prompt_str = "\n".join(prompt)
     
@@ -118,21 +114,19 @@ def generate_arctic_response():
     for event in replicate.stream("snowflake/snowflake-arctic-instruct",
                            input={"prompt": prompt_str,
                                   "prompt_template": r"{prompt}",
-                                  "temperature": temperature,
-                                  "top_p": top_p,
+                                  "temperature": 0.3,
+                                  "top_p": 0.9,
                                   }):
         yield str(event)
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api):
-    if file_upload is not None:
-        text = read_csv_file(file_upload)
-        st.session_state.messages.append({"role": "user", "content": 'csv upload'+text})
-    elif selected_table is not None:
-        # Get sample data from the selected table
+    if file_upload:
+        st.session_state.messages.append({"role": "user", "content": 'csv upload' + text})
+    elif selected_table:
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
-        sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
-        st.session_state.messages.append({"role": "user", "content": selected_table+sample_dt_to_txt})
+        sample_dt_to_txt = sample_data.to_string(index=False)
+        st.session_state.messages.append({"role": "user", "content": selected_table + sample_dt_to_txt})
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="🙋🏻‍♂️"):
         st.write(prompt)
