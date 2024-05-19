@@ -50,19 +50,16 @@ with st.sidebar:
     # Get the list of tables from the schema
     if selected_db is not None:
         schema = snowflake_conn.get_schema(selected_db)
-
-    selected_sch = st.selectbox("Select a schema", schema, index=None,
-                                  placeholder="None Selected"
-                                  )
-
-    if selected_sch is not None:
-        # Get the list of tables from the schema
-        tables = snowflake_conn.get_tables(selected_db, selected_sch)
-
-    # Display the tables in a dropdown menu
-    selected_table = st.selectbox("Select a table", tables, index=None,
-                                  placeholder="None Selected"
-                                  )
+        selected_sch = st.selectbox("Select a schema", schema, index=None,
+                                    placeholder="None Selected"
+                                    )
+        if selected_sch is not None:
+            # Get the list of tables from the schema
+            tables = snowflake_conn.get_tables(selected_db, selected_sch)
+            # Display the tables in a dropdown menu
+            selected_table = st.selectbox("Select a table", tables, index=None,
+                                        placeholder="None Selected"
+                                        )
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
