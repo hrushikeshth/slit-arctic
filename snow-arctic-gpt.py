@@ -55,6 +55,10 @@ with st.sidebar:
             # Display the tables in a dropdown menu
             selected_table = st.selectbox("Select a table", tables, index=None,
                                           placeholder="None Selected")
+        else:
+            selected_table = None
+    else:
+        selected_table = None
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
@@ -82,7 +86,6 @@ def clear_chat_history():
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
 st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM by Snowflake called [Snowflake Arctic](https://www.snowflake.com/blog/arctic-open-and-efficient-foundation-language-models-snowflake)')
-# st.sidebar.caption('The app repository can be found [here](https://github.com/hrushikeshth/slit-arctic)')
 
 # To make sure user aren't sending too much text to the Model
 @st.cache_resource(show_spinner=False)
