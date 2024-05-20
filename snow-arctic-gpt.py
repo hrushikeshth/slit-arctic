@@ -76,7 +76,7 @@ if "messages" not in st.session_state.keys():
     st.session_state.data_snippet_shown = False  # Add flag to track if data snippet has been shown
 
 # Display or clear chat messages
-for message in st.session_state.messages[3:]:
+for message in st.session_state.messages[1:]:
     with st.chat_message(message["role"], avatar=icons[message["role"]]):
         st.write(message["content"])
 
