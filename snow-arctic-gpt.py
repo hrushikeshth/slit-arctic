@@ -111,7 +111,6 @@ def generate_arctic_response(prompt_str):
 if prompt := st.chat_input(disabled=not replicate_api):
     # Construct the prompt string with data snippet if not already shown
     prompt_str = ""
-    st.session_state.messages
     if not st.session_state.data_snippet_shown:
         if file_upload is not None:
             text = read_csv_file(file_upload)
@@ -124,7 +123,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
             prompt_str += sample_dt_to_txt + "\n"
             st.session_state.data_snippet_shown = True  # Set flag to indicate data snippet has been shown
     
-    prompt_str += "user\n" + prompt + "\nassistant\n"
+    prompt_str += st.session_state.messages + "user\n" + prompt + "\nassistant\n"
     
     # Append user message to session state without data snippet
     st.session_state.messages.append({"role": "user", "content": prompt})
