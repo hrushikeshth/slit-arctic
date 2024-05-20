@@ -111,6 +111,7 @@ def generate_arctic_response(prompt_str):
 if prompt := st.chat_input(disabled=not replicate_api):
     # Construct the prompt string with data snippet if not already shown
     prompt_str = ""
+    st.session_state.messages
     if not st.session_state.data_snippet_shown:
         if file_upload is not None:
             text = read_csv_file(file_upload)
