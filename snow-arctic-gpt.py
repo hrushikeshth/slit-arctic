@@ -66,6 +66,17 @@ if "messages" not in st.session_state.keys():
     st.session_state.messages = [{"role": "assistant", "content": get_template_message()}]
     st.session_state.messages.append({"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"})
 
+# Store the data snippet in session state to avoid redundancy
+if "data_snippet" not in st.session_state:
+    st.session_state.data_snippet = ""
+
+# Display the data snippet if a table is selected and data snippet is not already set
+if selected_table and not st.session_state.data_snippet:
+    sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
+    st.session_state.data_snippet = sample_data.to_string(index=False)
+    st.write("Sample data from the selected table:")
+    st.text(st.session_state.data_snippet)
+
 # Display or clear chat messages
 for message in st.session_state.messages[3:]:
     with st.chat_message(message["role"], avatar=icons[message["role"]]):
@@ -73,6 +84,7 @@ for message in st.session_state.messages[3:]:
 
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
+    st.session_state.data_snippet = ""
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
 
@@ -120,10 +132,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
     if file_upload:
         st.session_state.messages.append({"role": "user", "content": 'csv upload' + text})
     elif selected_table:
-        sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
-        sample_dt_to_txt = sample_data.to_string(index=False)
-        st.session_state.messages.append({"role": "user", "content": selected_table + sample_dt_to_txt})
-    st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="🙋🏻‍♂️"):
         st.write(prompt)
 
