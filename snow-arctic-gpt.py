@@ -117,7 +117,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
         # Get sample data from the selected table
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
         sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
-        data_message = f"Database: {selected_db}\nSchema: {selected_sch}\nTable: {selected_table}\n{sample_dt_to_txt}"
+        data_message = f"Database: {selected_db}\nSchema: {selected_sch}\nTable: {selected_table}\nSample Data:{sample_dt_to_txt}"
         st.session_state.messages.append({"role": "data", "content": data_message})
     
     # Add all data snippets to the prompt string
