@@ -120,6 +120,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
             # Get sample data from the selected table
             sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
             sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
+            prompt_str += f"Database: {selected_db}\nSchema: {selected_sch}\nTable: {selected_table}\n"
             prompt_str += sample_dt_to_txt + "\n"
             st.session_state.data_snippet_shown = True  # Set flag to indicate data snippet has been shown
     
