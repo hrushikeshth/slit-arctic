@@ -141,3 +141,6 @@ if st.session_state.messages[-1]["role"] != "assistant":
         full_response = st.write_stream(response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
+
+text_contents = prompt_str
+st.download_button("Download some text", text_contents)
