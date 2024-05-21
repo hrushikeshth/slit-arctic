@@ -120,10 +120,10 @@ if prompt := st.chat_input(disabled=not replicate_api):
         # Get sample data from the selected table
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
         sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
-        data_snippet = f"Database: {selected_db}\nSchema: {selected_sch}\nTable: {selected_table}\nSample Data: {sample_dt_to_txt}"
-        prompt_str += "current table selection: " + data_snippet + "\n\n"
+        data_snippet = f"Database: {selected_db}, Schema: {selected_sch}, Table: {selected_table}\nSample Data: {sample_dt_to_txt}"
+        prompt_str += "CURRENT TABLE SELECTION - " + data_snippet + "\n"
         # Store the new data snippet in the session state
-        data_snippet = "previous table selection: " + data_snippet
+        data_snippet = "PREVIOUS TABLE SELECTION - " + data_snippet + "\n\n"
         st.session_state.data_snippets.append(data_snippet)
     
     prompt_str += "user\n" + prompt + "\nassistant\n"
