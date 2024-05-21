@@ -33,7 +33,7 @@ with st.sidebar:
         if not (replicate_api.startswith('r8_') and len(replicate_api) == 40):
             st.warning('Please enter your Replicate API token.', icon='⚠️')
             st.markdown("**Don't have an API token?** Visit [Replicate](https://replicate.com) to get one.")
-
+    
     os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
     # Hardcoding the temperature & sampling value to limit repetitive & nonsensical tokens.
@@ -111,9 +111,7 @@ def generate_arctic_response(prompt_str):
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api):
     # Construct the prompt string with all historical data snippets
-    prompt_str = ""
-    for snippet in st.session_state.data_snippets:
-        prompt_str += snippet + "\n"
+    prompt_str = "\n".join(st.session_state.data_snippets) + "\n"
     
     if file_upload is not None:
         text = read_csv_file(file_upload)
@@ -123,7 +121,7 @@ if prompt := st.chat_input(disabled=not replicate_api):
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
         sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
         data_snippet = f"Database: {selected_db}\nSchema: {selected_sch}\nTable: {selected_table}\nSample Data: {sample_dt_to_txt}"
-        prompt_str += "current table selection: " + data_snippet + "\n" + "\n"
+        prompt_str += "current table selection: " + data_snippet + "\n\n"
         # Store the new data snippet in the session state
         data_snippet = "previous table selection: " + data_snippet
         st.session_state.data_snippets.append(data_snippet)
@@ -137,11 +135,10 @@ if prompt := st.chat_input(disabled=not replicate_api):
 
     text_contents = prompt_str
     st.download_button("Download some text", text_contents)
-
-# Generate a new response if last message is not from assistant
-if st.session_state.messages[-1]["role"] != "assistant":
-    with st.chat_message("assistant", avatar="❄️"):
-        response = generate_arctic_response(prompt_str)
-        full_response = st.write_stream(response)
-    message = {"role": "assistant", "content": full_response}
-    st.session_state.messages.append(message)
+    # Generate a new response if last message is not from assistant
+    if st.session_state.messages[-1]["role"] != "assistant":
+        with st.chat_message("assistant", avatar="❄️"):
+            response = generate_arctic_response(prompt_str)
+            full_response = "".join(response)
+            st.write(full_response)
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
