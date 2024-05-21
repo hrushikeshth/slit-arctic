@@ -1,5 +1,5 @@
 # ❆ Snowflake-Arctic dbt Assistant
-This Streamlit app is just small demonstration of a general use-case of the new 🤖 LLM from ❄️ Snowflake called Arctic. I'll be updating this or adding new apps for a more specific use-case related to Data Warehousing & Data Modelling functionalities. For now, I'm developing this as the participation project for [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/).
+This Streamlit app is just small demonstration of a general use-case of the new 🤖 LLM from ❄️ Snowflake called Arctic. I'm developing this as the participation project for [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/).
 
 
 ## Getting your own Replicate API token
@@ -11,8 +11,13 @@ After creating a Replicate account, you can access your API token from [this pag
 ## Setup Instructions
 
 ### Prerequisites
+- streamlit (obviously!)
 - Python 3.8 or later 🐍
 - pip3 📦
+- replicate
+- transformers
+- pandas
+- snowflake-snowpark-python
 
 ### Installation
 1. **Clone this repository**
