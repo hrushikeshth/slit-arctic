@@ -134,6 +134,9 @@ if prompt := st.chat_input(disabled=not replicate_api):
     with st.chat_message("user", avatar="🙋🏻‍♂️"):
         st.write(prompt)
 
+    text_contents = prompt_str
+    st.download_button("Download some text", text_contents)
+
 # Generate a new response if last message is not from assistant
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant", avatar="❄️"):
@@ -141,6 +144,3 @@ if st.session_state.messages[-1]["role"] != "assistant":
         full_response = st.write_stream(response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
-
-text_contents = prompt_str
-st.download_button("Download some text", text_contents)
