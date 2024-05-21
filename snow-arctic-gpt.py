@@ -60,6 +60,8 @@ with st.sidebar:
     else:
         selected_table = None
 
+last_selected_table = None
+
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
 
@@ -121,12 +123,12 @@ if prompt := st.chat_input(disabled=not replicate_api):
     if file_upload is not None:
         text = read_csv_file(file_upload)
         prompt_str += text + "\n"
-    elif selected_table is not None:
-        # Get sample data from the selected table
+    if selected_table is not None and selected_table != last_selected_table:
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
         sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
         data_snippet = f"Database: {selected_db}, Schema: {selected_sch}, Table: {selected_table}\nSample Data: {sample_dt_to_txt}"
         prompt_str += "CURRENT TABLE SELECTION - " + data_snippet + "\n"
+        last_selected_table = selected_table
         # Store the new data snippet in the session state
         data_snippet = "PREVIOUS TABLE SELECTION - " + data_snippet + "\n\n"
         st.session_state.data_snippets.append(data_snippet)
