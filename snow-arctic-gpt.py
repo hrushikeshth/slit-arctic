@@ -73,15 +73,17 @@ def read_csv_file(file_upload):
 if "messages" not in st.session_state.keys():
     st.session_state.messages = [{"role": "user", "content": get_template_message()}]
     st.session_state.messages.append({"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"})
+    st.session_state.data_snippets = []  # Store historical data snippets
 
-# Display or clear chat messages, exclude 'data' messages
+# Display or clear chat messages
 for message in st.session_state.messages[1:]:
-    if message["role"] != "data":
-        with st.chat_message(message["role"], avatar=icons.get(message["role"], "")):
+    if message["role"] in ["user", "assistant"]:
+        with st.chat_message(message["role"], avatar=icons[message["role"]]):
             st.write(message["content"])
 
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
+    st.session_state.data_snippets = []  # Reset historical data snippets
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
 st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM by Snowflake called [Snowflake Arctic](https://www.snowflake.com/blog/arctic-open-and-efficient-foundation-language-models-snowflake)')
@@ -108,34 +110,34 @@ def generate_arctic_response(prompt_str):
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api):
-    # Construct the prompt string with data snippet if available
+    # Construct the prompt string with all historical data snippets
     prompt_str = ""
+    for snippet in st.session_state.data_snippets:
+        prompt_str += snippet + "\n"
+    
     if file_upload is not None:
         text = read_csv_file(file_upload)
-        st.session_state.messages.append({"role": "data", "content": text})
+        prompt_str += text + "\n"
     elif selected_table is not None:
         # Get sample data from the selected table
         sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
         sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
-        data_message = f"Database: {selected_db}\nSchema: {selected_sch}\nTable: {selected_table}\nSample Data:{sample_dt_to_txt}"
-        st.session_state.messages.append({"role": "data", "content": data_message})
+        data_snippet = f"Database: {selected_db}\nSchema: {selected_sch}\nTable: {selected_table}\nample Data: {sample_dt_to_txt}"
+        prompt_str += data_snippet + "\n"
+        # Store the new data snippet in the session state
+        st.session_state.data_snippets.append(data_snippet)
     
-    # Add all data snippets to the prompt string
-    for message in st.session_state.messages:
-        if message["role"] == "data":
-            prompt_str += message["content"] + "\n"
-
     prompt_str += "user\n" + prompt + "\nassistant\n"
-
-    # Append user message to session state
+    
+    # Append user message to session state without data snippet
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="🙋🏻‍♂️"):
         st.write(prompt)
 
-    # Generate a new response if last message is not from assistant
-    if st.session_state.messages[-1]["role"] != "assistant":
-        with st.chat_message("assistant", avatar="❄️"):
-            response = generate_arctic_response(prompt_str)
-            full_response = st.write_stream(response)
-        message = {"role": "assistant", "content": full_response}
-        st.session_state.messages.append(message)
+# Generate a new response if last message is not from assistant
+if st.session_state.messages[-1]["role"] != "assistant":
+    with st.chat_message("assistant", avatar="❄️"):
+        response = generate_arctic_response(prompt_str)
+        full_response = st.write_stream(response)
+    message = {"role": "assistant", "content": full_response}
+    st.session_state.messages.append(message)
