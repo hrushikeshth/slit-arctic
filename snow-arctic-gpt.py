@@ -55,12 +55,14 @@ with st.sidebar:
             # Display the tables in a dropdown menu
             selected_table = st.selectbox("Select a table", tables, index=None,
                                           placeholder="None Selected")
+            # Store selected table information in session state
+            st.session_state.selected_db = selected_db
+            st.session_state.selected_sch = selected_sch
+            st.session_state.selected_table = selected_table
         else:
             selected_table = None
     else:
         selected_table = None
-
-last_selected_table = None
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
@@ -75,7 +77,17 @@ def read_csv_file(file_upload):
 if "messages" not in st.session_state.keys():
     st.session_state.messages = [{"role": "assistant", "content": get_template_message()}]
     st.session_state.messages.append({"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"})
-    st.session_state.data_snippets = []  # Store historical data snippets
+    st.session_state.data_snippet = ""  # Store the current data snippet
+
+# Update data snippet only if a new table is selected
+if selected_table is not None and (
+    st.session_state.get("selected_db") != selected_db or
+    st.session_state.get("selected_sch") != selected_sch or
+    st.session_state.get("selected_table") != selected_table
+):
+    sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
+    sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
+    st.session_state.data_snippet = f"Database: {selected_db}, Schema: {selected_sch}, Table: {selected_table}\nSample Data: {sample_dt_to_txt}\n"
 
 # Display or clear chat messages
 for message in st.session_state.messages[1:]:
@@ -85,7 +97,7 @@ for message in st.session_state.messages[1:]:
 
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"}]
-    st.session_state.data_snippets = []  # Reset historical data snippets
+    st.session_state.data_snippet = ""  # Reset data snippet
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
 st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM by Snowflake called [Snowflake Arctic](https://www.snowflake.com/blog/arctic-open-and-efficient-foundation-language-models-snowflake)')
@@ -117,21 +129,12 @@ def generate_arctic_response(prompt_str):
 
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api):
-    # Construct the prompt string with all historical data snippets
-    prompt_str = "\n".join(st.session_state.data_snippets) + "\n"
+    # Construct the prompt string with the current data snippet if available
+    prompt_str = st.session_state.data_snippet + "\n"
     
     if file_upload is not None:
         text = read_csv_file(file_upload)
         prompt_str += text + "\n"
-    if selected_table is not None and selected_table != last_selected_table:
-        sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
-        sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
-        data_snippet = f"Database: {selected_db}, Schema: {selected_sch}, Table: {selected_table}\nSample Data: {sample_dt_to_txt}"
-        prompt_str += "CURRENT TABLE SELECTION - " + data_snippet + "\n"
-        last_selected_table = selected_table
-        # Store the new data snippet in the session state
-        data_snippet = "PREVIOUS TABLE SELECTION - " + data_snippet + "\n\n"
-        st.session_state.data_snippets.append(data_snippet)
     
     prompt_str += "user\n" + prompt + "\nassistant\n"
     
