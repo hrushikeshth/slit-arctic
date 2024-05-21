@@ -71,7 +71,7 @@ def read_csv_file(file_upload):
 
 # Store LLM-generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "user", "content": get_template_message()}]
+    st.session_state.messages = [{"role": "assistant", "content": get_template_message()}]
     st.session_state.messages.append({"role": "assistant", "content": "Hi. I'm your dbt Assistant, based on Arctic, a new & efficient language model by Snowflake. You can start by uploading your file above and maybe by asking me to generate a YAML file?"})
     st.session_state.data_snippets = []  # Store historical data snippets
 
@@ -87,6 +87,7 @@ def clear_chat_history():
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
 st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM by Snowflake called [Snowflake Arctic](https://www.snowflake.com/blog/arctic-open-and-efficient-foundation-language-models-snowflake)')
+st.sidebar.caption('The app repository can be found [here](https://github.com/hrushikeshth/slit-arctic)')
 
 # To make sure user aren't sending too much text to the Model
 @st.cache_resource(show_spinner=False)
@@ -100,6 +101,10 @@ def get_num_tokens(prompt):
 
 # Function for generating Snowflake Arctic response
 def generate_arctic_response(prompt_str):
+    if st.session_state.messages[0]["role"] == "assistant":
+        # Include the initial templated message in the prompt string
+        prompt_str = "assistant\n" + st.session_state.messages[0]["content"] + "\n" + prompt_str
+        
     for event in replicate.stream("snowflake/snowflake-arctic-instruct",
                                   input={"prompt": prompt_str,
                                          "prompt_template": r"{prompt}",
