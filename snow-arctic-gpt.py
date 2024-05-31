@@ -32,7 +32,10 @@ with st.sidebar:
     top_p = 0.9
 
     # Initialize Snowflake connection
-    snowflake_conn = SnowflakeConnection()
+    try:
+        snowflake_conn = SnowflakeConnection()
+    except:
+        print("Unable to connect to Snowflake")
 
     # Get Snowflake session (optional if you don't need to use the session directly)
     session = snowflake_conn.get_session()
