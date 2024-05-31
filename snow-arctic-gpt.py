@@ -4,7 +4,7 @@ import replicate
 import os
 from transformers import AutoTokenizer
 from template import get_template_message
-from utils.snowflake_connection import SnowflakeConnection, SnowflakeConnectionError
+from utils.snowflake_connection import SnowflakeConnection
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
@@ -32,36 +32,36 @@ with st.sidebar:
     top_p = 0.9
 
     # Initialize Snowflake connection
-    try:
-        snowflake_conn = SnowflakeConnection()
-        # Get Snowflake session (optional if you don't need to use the session directly)
-        session = snowflake_conn.get_session()
+    snowflake_conn = SnowflakeConnection()
 
+    if snowflake_conn.connection_failed:
+        st.error("Snowflake connection failed, but you can still talk with the assistant", icon="⚠️")
+        dblist = []
+        schema = []
+        tables = []
+    else:
         # Get the list of dbs from Snowflake
         dblist = snowflake_conn.get_db()
 
-        # Select and display data table
-        selected_db = st.selectbox("Select a database", dblist, index=None,
-                                   placeholder="None Selected")
+    # Select and display data table
+    selected_db = st.selectbox("Select a database", dblist, index=None,
+                               placeholder="None Selected")
 
-        # Get the list of tables from the schema
-        if selected_db is not None:
-            schema = snowflake_conn.get_schema(selected_db)
-            selected_sch = st.selectbox("Select a schema", schema, index=None,
-                                        placeholder="None Selected")
-            if selected_sch is not None:
-                # Get the list of tables from the schema
-                tables = snowflake_conn.get_tables(selected_db, selected_sch)
-                # Display the tables in a dropdown menu
-                selected_table = st.selectbox("Select a table", tables, index=None,
-                                              placeholder="None Selected")
-            else:
-                selected_table = None
+    # Get the list of tables from the schema
+    if selected_db is not None:
+        schema = snowflake_conn.get_schema(selected_db)
+        selected_sch = st.selectbox("Select a schema", schema, index=None,
+                                    placeholder="None Selected")
+        if selected_sch is not None:
+            # Get the list of tables from the schema
+            tables = snowflake_conn.get_tables(selected_db, selected_sch)
+            # Display the tables in a dropdown menu
+            selected_table = st.selectbox("Select a table", tables, index=None,
+                                          placeholder="None Selected")
         else:
             selected_table = None
-    except SnowflakeConnectionError:
-        st.sidebar.error("Snowflake connection failed, but you can still talk with the assistant", icon="⚠️")
-        selected_db, selected_sch, selected_table = None, None, None
+    else:
+        selected_table = None
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
@@ -89,62 +89,80 @@ def clear_chat_history():
     st.session_state.data_snippets = []  # Reset historical data snippets
 
 st.sidebar.button('Clear chat history', on_click=clear_chat_history)
-st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM by Snowflake called [Snowflake Arctic](https://www.snowflake.com/blog/arctic-open-and-efficient-foundation-language-models-snowflake)')
-st.sidebar.caption('The app repository can be found [here](https://github.com/hrushikeshth/slit-arctic)')
-
-# To make sure user aren't sending too much text to the Model
-@st.cache_resource(show_spinner=False)
-def get_tokenizer():
-    return AutoTokenizer.from_pretrained("huggyllama/llama-7b")
-
-def get_num_tokens(prompt):
-    tokenizer = get_tokenizer()
-    tokens = tokenizer.tokenize(prompt)
-    return len(tokens)
-
-# Function for generating Snowflake Arctic response
-def generate_arctic_response(prompt_str):
-    if st.session_state.messages[0]["role"] == "assistant":
-        # Include the initial templated message in the prompt string
-        prompt_str = "assistant\n" + st.session_state.messages[0]["content"] + "\n" + prompt_str
-        
-    for event in replicate.stream("snowflake/snowflake-arctic-instruct",
-                                  input={"prompt": prompt_str,
-                                         "prompt_template": r"{prompt}",
-                                         "temperature": temperature,
-                                         "top_p": top_p,
-                                         }):
-        yield str(event)
+st.sidebar.caption('App by [Hrushi](https://www.linkedin.com/in/hrushikeshth/) as an Entrant in [The Future of AI is Open (Hackathon)](https://arctic-streamlit-hackathon.devpost.com/), demonstrating the new LLM - Arctic by Snowflake, Inc.')
 
 # User-provided prompt
-if prompt := st.chat_input(disabled=not replicate_api):
-    # Construct the prompt string with all historical data snippets
-    prompt_str = "\n".join(st.session_state.data_snippets) + "\n"
-    
-    if file_upload is not None:
-        text = read_csv_file(file_upload)
-        prompt_str += text + "\n"
-    elif selected_table is not None:
-        # Get sample data from the selected table
-        sample_data = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
-        sample_dt_to_txt = sample_data.to_string(index=False)  # Convert DataFrame to string
-        data_snippet = f"Database: {selected_db}, Schema: {selected_sch}, Table: {selected_table}\nSample Data: {sample_dt_to_txt}"
-        prompt_str += "CURRENT TABLE SELECTION - " + data_snippet + "\n"
-        # Store the new data snippet in the session state
-        data_snippet = "PREVIOUS TABLE SELECTION - " + data_snippet + "\n\n"
-        st.session_state.data_snippets.append(data_snippet)
-    
-    prompt_str += "user\n" + prompt + "\nassistant\n"
-    
-    # Append user message to session state without data snippet
+if prompt := st.chat_input(placeholder="Ask anything to your Assistant"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="🙋🏻‍♂️"):
+
+    with st.chat_message("user", avatar=icons["user"]):
         st.write(prompt)
 
-    # Generate a new response if last message is not from assistant
-    if st.session_state.messages[-1]["role"] != "assistant":
-        with st.chat_message("assistant", avatar="❄️"):
-            response = generate_arctic_response(prompt_str)
-            full_response = "".join(response)
-            st.write(full_response)
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+    # Including table data snippet if table is selected
+    if selected_table:
+        data_snippet = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
+        if not data_snippet.empty:
+            data_snippet_str = data_snippet.to_string(index=False)
+            st.session_state.data_snippets.append(data_snippet_str)
+        else:
+            data_snippet_str = "No data available."
+
+        template_message = get_template_message()
+        template_message += f"\n\nHere is a snippet of the table '{selected_table}' from the schema '{selected_sch}' in the database '{selected_db}':\n{data_snippet_str}\n\n"
+
+        st.session_state.messages.append({"role": "data", "content": template_message})
+
+        # Display assistant response
+        with st.chat_message("assistant", avatar=icons["assistant"]):
+            with st.spinner("Thinking..."):
+                response = replicate.run(
+                    "a16z-infra/arctic-chat:latest",
+                    input={
+                        "prompt": template_message,
+                        "token_max_length": 1000,
+                        "temperature": temperature,
+                        "top_p": top_p
+                    }
+                )
+                st.write(response['choices'][0]['message']['content'])
+                st.session_state.messages.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
+
+    # Handle case when no table is selected but file is uploaded
+    elif file_upload:
+        template_message = get_template_message()
+        data_snippet_str = read_csv_file(file_upload)
+        st.session_state.data_snippets.append(data_snippet_str)
+        template_message += f"\n\nHere is a snippet of the uploaded file:\n{data_snippet_str}\n\n"
+        
+        st.session_state.messages.append({"role": "data", "content": template_message})
+
+        # Display assistant response
+        with st.chat_message("assistant", avatar=icons["assistant"]):
+            with st.spinner("Thinking..."):
+                response = replicate.run(
+                    "a16z-infra/arctic-chat:latest",
+                    input={
+                        "prompt": template_message,
+                        "token_max_length": 1000,
+                        "temperature": temperature,
+                        "top_p": top_p
+                    }
+                )
+                st.write(response['choices'][0]['message']['content'])
+                st.session_state.messages.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
+
+    # Handle case when neither table is selected nor file is uploaded
+    else:
+        with st.chat_message("assistant", avatar=icons["assistant"]):
+            with st.spinner("Thinking..."):
+                response = replicate.run(
+                    "a16z-infra/arctic-chat:latest",
+                    input={
+                        "prompt": prompt,
+                        "token_max_length": 1000,
+                        "temperature": temperature,
+                        "top_p": top_p
+                    }
+                )
+                st.write(response['choices'][0]['message']['content'])
+                st.session_state.messages.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
