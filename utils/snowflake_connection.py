@@ -4,6 +4,8 @@ import streamlit as st
 import snowflake.connector
 from snowflake.snowpark.session import Session
 
+class SnowflakeConnectionError(Exception):
+    pass
 
 class SnowflakeConnection:
     def __init__(self):

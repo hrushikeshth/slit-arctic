@@ -4,7 +4,7 @@ import replicate
 import os
 from transformers import AutoTokenizer
 from template import get_template_message
-from utils.snowflake_connection import SnowflakeConnection
+from utils.snowflake_connection import SnowflakeConnection, SnowflakeConnectionError
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
@@ -34,34 +34,34 @@ with st.sidebar:
     # Initialize Snowflake connection
     try:
         snowflake_conn = SnowflakeConnection()
-    except:
-        print("Unable to connect to Snowflake")
+        # Get Snowflake session (optional if you don't need to use the session directly)
+        session = snowflake_conn.get_session()
 
-    # Get Snowflake session (optional if you don't need to use the session directly)
-    session = snowflake_conn.get_session()
+        # Get the list of dbs from Snowflake
+        dblist = snowflake_conn.get_db()
 
-    # Get the list of dbs from Snowflake
-    dblist = snowflake_conn.get_db()
+        # Select and display data table
+        selected_db = st.selectbox("Select a database", dblist, index=None,
+                                   placeholder="None Selected")
 
-    # Select and display data table
-    selected_db = st.selectbox("Select a database", dblist, index=None,
-                               placeholder="None Selected")
-
-    # Get the list of tables from the schema
-    if selected_db is not None:
-        schema = snowflake_conn.get_schema(selected_db)
-        selected_sch = st.selectbox("Select a schema", schema, index=None,
-                                    placeholder="None Selected")
-        if selected_sch is not None:
-            # Get the list of tables from the schema
-            tables = snowflake_conn.get_tables(selected_db, selected_sch)
-            # Display the tables in a dropdown menu
-            selected_table = st.selectbox("Select a table", tables, index=None,
-                                          placeholder="None Selected")
+        # Get the list of tables from the schema
+        if selected_db is not None:
+            schema = snowflake_conn.get_schema(selected_db)
+            selected_sch = st.selectbox("Select a schema", schema, index=None,
+                                        placeholder="None Selected")
+            if selected_sch is not None:
+                # Get the list of tables from the schema
+                tables = snowflake_conn.get_tables(selected_db, selected_sch)
+                # Display the tables in a dropdown menu
+                selected_table = st.selectbox("Select a table", tables, index=None,
+                                              placeholder="None Selected")
+            else:
+                selected_table = None
         else:
             selected_table = None
-    else:
-        selected_table = None
+    except SnowflakeConnectionError:
+        st.sidebar.error("Snowflake connection failed, but you can still talk with the assistant", icon="⚠️")
+        selected_db, selected_sch, selected_table = None, None, None
 
 # Accepting file input from User
 file_upload = st.file_uploader("Upload your Table in CSV format (Only 1 file at a time)", type=['csv'])
