@@ -12,15 +12,6 @@ icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
 # App title
 st.set_page_config(page_title="❄️ Arctic dbt Assistant")
 
-# Initialize Snowflake connection
-snowflake_conn = SnowflakeConnection()
-
-# Get Snowflake session (optional if you don't need to use the session directly)
-session = snowflake_conn.get_session()
-
-# Get the list of dbs from Snowflake
-dblist = snowflake_conn.get_db()
-
 # Replicate Credentials
 with st.sidebar:
     st.image('./dbt-seeklogo.svg', width=35)
@@ -39,6 +30,15 @@ with st.sidebar:
     # Hardcoding the temperature & sampling value to limit repetitive & nonsensical tokens.
     temperature = 0.3
     top_p = 0.9
+
+    # Initialize Snowflake connection
+    snowflake_conn = SnowflakeConnection()
+
+    # Get Snowflake session (optional if you don't need to use the session directly)
+    session = snowflake_conn.get_session()
+
+    # Get the list of dbs from Snowflake
+    dblist = snowflake_conn.get_db()
 
     # Select and display data table
     selected_db = st.selectbox("Select a database", dblist, index=None,
