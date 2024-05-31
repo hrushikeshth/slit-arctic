@@ -5,6 +5,7 @@ import os
 from transformers import AutoTokenizer
 from template import get_template_message
 from utils.snowflake_connection import SnowflakeConnection
+from snowflake.connector.errors import DatabaseError  # Import DatabaseError
 
 # Set assistant & user icons
 icons = {"assistant": "❄️", "user": "🙋🏻‍♂️"}
@@ -32,33 +33,36 @@ with st.sidebar:
     top_p = 0.9
 
     # Initialize Snowflake connection
-    snowflake_conn = SnowflakeConnection()
-
-    if snowflake_conn.connection_failed:
-        st.error("Snowflake connection failed, but you can still talk with the assistant", icon="⚠️")
+    try:
+        snowflake_conn = SnowflakeConnection()
+        dblist = snowflake_conn.get_db() if not snowflake_conn.connection_failed else []
+        schema = []
+        tables = []
+    except DatabaseError as e:
+        st.error(f"Snowflake connection failed: {e}", icon="⚠️")
         dblist = []
         schema = []
         tables = []
-    else:
-        # Get the list of dbs from Snowflake
-        dblist = snowflake_conn.get_db()
 
     # Select and display data table
     selected_db = st.selectbox("Select a database", dblist, index=None,
                                placeholder="None Selected")
 
     # Get the list of tables from the schema
-    if selected_db is not None:
-        schema = snowflake_conn.get_schema(selected_db)
-        selected_sch = st.selectbox("Select a schema", schema, index=None,
-                                    placeholder="None Selected")
-        if selected_sch is not None:
-            # Get the list of tables from the schema
-            tables = snowflake_conn.get_tables(selected_db, selected_sch)
-            # Display the tables in a dropdown menu
-            selected_table = st.selectbox("Select a table", tables, index=None,
-                                          placeholder="None Selected")
-        else:
+    if selected_db:
+        try:
+            schema = snowflake_conn.get_schema(selected_db)
+            selected_sch = st.selectbox("Select a schema", schema, index=None,
+                                        placeholder="None Selected")
+            if selected_sch:
+                tables = snowflake_conn.get_tables(selected_db, selected_sch)
+                selected_table = st.selectbox("Select a table", tables, index=None,
+                                              placeholder="None Selected")
+            else:
+                selected_table = None
+        except DatabaseError as e:
+            st.error(f"Error fetching schema or tables: {e}", icon="⚠️")
+            selected_sch = None
             selected_table = None
     else:
         selected_table = None
@@ -100,32 +104,32 @@ if prompt := st.chat_input(placeholder="Ask anything to your Assistant"):
 
     # Including table data snippet if table is selected
     if selected_table:
-        data_snippet = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
-        if not data_snippet.empty:
-            data_snippet_str = data_snippet.to_string(index=False)
+        try:
+            data_snippet = snowflake_conn.get_sample_data(selected_db, selected_sch, selected_table)
+            data_snippet_str = data_snippet.to_string(index=False) if not data_snippet.empty else "No data available."
             st.session_state.data_snippets.append(data_snippet_str)
-        else:
-            data_snippet_str = "No data available."
 
-        template_message = get_template_message()
-        template_message += f"\n\nHere is a snippet of the table '{selected_table}' from the schema '{selected_sch}' in the database '{selected_db}':\n{data_snippet_str}\n\n"
+            template_message = get_template_message()
+            template_message += f"\n\nHere is a snippet of the table '{selected_table}' from the schema '{selected_sch}' in the database '{selected_db}':\n{data_snippet_str}\n\n"
 
-        st.session_state.messages.append({"role": "data", "content": template_message})
+            st.session_state.messages.append({"role": "data", "content": template_message})
 
-        # Display assistant response
-        with st.chat_message("assistant", avatar=icons["assistant"]):
-            with st.spinner("Thinking..."):
-                response = replicate.run(
-                    "a16z-infra/arctic-chat:latest",
-                    input={
-                        "prompt": template_message,
-                        "token_max_length": 1000,
-                        "temperature": temperature,
-                        "top_p": top_p
-                    }
-                )
-                st.write(response['choices'][0]['message']['content'])
-                st.session_state.messages.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
+            # Display assistant response
+            with st.chat_message("assistant", avatar=icons["assistant"]):
+                with st.spinner("Thinking..."):
+                    response = replicate.run(
+                        "a16z-infra/arctic-chat:latest",
+                        input={
+                            "prompt": template_message,
+                            "token_max_length": 1000,
+                            "temperature": temperature,
+                            "top_p": top_p
+                        }
+                    )
+                    st.write(response['choices'][0]['message']['content'])
+                    st.session_state.messages.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
+        except DatabaseError as e:
+            st.error(f"Error fetching data from table: {e}", icon="⚠️")
 
     # Handle case when no table is selected but file is uploaded
     elif file_upload:
