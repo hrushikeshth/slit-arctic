@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import snowflake.connector
 import logger
+import numpy
 from snowflake.snowpark.session import Session
 from snowflake.connector.errors import DatabaseError
 
