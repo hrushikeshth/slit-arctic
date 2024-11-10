@@ -2,6 +2,7 @@ from typing import Any, Dict
 import pandas as pd
 import streamlit as st
 import snowflake.connector
+import logger
 from snowflake.snowpark.session import Session
 from snowflake.connector.errors import DatabaseError
 
@@ -87,6 +88,7 @@ class SnowflakeConnection:
         if conn:
             try:
                 df = pd.read_sql(query, conn)
+                logger.info('Complete')
                 return df["TABLE_NAME"].tolist()
             except DatabaseError:
                 _self.connection_failed = True
