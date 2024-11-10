@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import replicate
 import os
+import numpy
 from transformers import AutoTokenizer
 from template import get_template_message
 from utils.snowflake_connection import SnowflakeConnection
